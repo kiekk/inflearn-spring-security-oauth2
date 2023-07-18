@@ -1,12 +1,12 @@
 package io.security.oauth2.inflearnspringsecurityoauth2.converters;
 
 import io.security.oauth2.inflearnspringsecurityoauth2.entity.ProviderUser;
-import io.security.oauth2.inflearnspringsecurityoauth2.entity.social.KakaoUser;
+import io.security.oauth2.inflearnspringsecurityoauth2.entity.social.KakaoOidcUser;
 import io.security.oauth2.inflearnspringsecurityoauth2.enums.OAuth2Config;
 import io.security.oauth2.inflearnspringsecurityoauth2.util.OAuth2Utils;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
-public class OAuth2KakaoProviderUserConverter implements ProviderUserConverter<ProviderUserRequest, ProviderUser> {
+public class OAuth2KakaoOidcProviderUserConverter implements ProviderUserConverter<ProviderUserRequest, ProviderUser> {
     @Override
     public ProviderUser converter(ProviderUserRequest providerUserRequest) {
 
@@ -14,12 +14,11 @@ public class OAuth2KakaoProviderUserConverter implements ProviderUserConverter<P
             return null;
         }
 
-        if (providerUserRequest.oAuth2User() instanceof OidcUser) {
+        if (!(providerUserRequest.oAuth2User() instanceof OidcUser)) {
             return null;
         }
 
-        return new KakaoUser(OAuth2Utils.getOtherAttributes(
-                providerUserRequest.oAuth2User(), "kakao_account", "profile"),
+        return new KakaoOidcUser(OAuth2Utils.getMainAttributes(providerUserRequest.oAuth2User()),
                 providerUserRequest.oAuth2User(),
                 providerUserRequest.clientRegistration());
     }

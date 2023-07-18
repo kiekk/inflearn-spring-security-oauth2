@@ -1,6 +1,7 @@
 package io.security.oauth2.inflearnspringsecurityoauth2.service;
 
 import io.security.oauth2.inflearnspringsecurityoauth2.converters.ProviderUserRequest;
+import io.security.oauth2.inflearnspringsecurityoauth2.entity.PrincipalUser;
 import io.security.oauth2.inflearnspringsecurityoauth2.entity.ProviderUser;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -25,7 +26,7 @@ public class CustomOAuth2UserService extends AbstractOAuth2UserService implement
 
         // 회원 가입
         super.register(providerUser, userRequest);
-        return oAuth2User;
+        return new PrincipalUser(providerUser);
     }
 
 }

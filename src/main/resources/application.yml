@@ -46,6 +46,7 @@ spring:
             client-name: client-app
             redirect-uri: http://localhost:8081/login/oauth2/code/kakao
             scope:
+              - openid
               - profile_image
               - profile_nickname
               - account_email
@@ -58,14 +59,14 @@ spring:
             scope:
               - public_profile
               - email
-          microsoft:
-            client-id: 'client-id'
-            client-secret: 'client-secret'
-            authorization-grant-type: authorization_code
-            client-name: my-cliient-app
-            redirect-uri: http://localhost:8081/login/oauth2/code/microsoft
-            scope:
-              - user.read
+#          microsoft:
+#            client-id: '33b2fdc2-674f-417a-8bcd-13696792e923'
+#            client-secret: 'AhU8Q~.p2~JR4fUSS4hYyPofvDLw45dIpGJjZclr'
+#            authorization-grant-type: authorization_code
+#            client-name: my-cliient-app
+#            redirect-uri: http://localhost:8081/login/oauth2/code/microsoft
+#            scope:
+#              - user.read
         provider:
           keycloak:
             authorization-uri: http://localhost:18080/realms/master/protocol/openid-connect/auth
@@ -87,11 +88,12 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             jwk-set-uri: https://kauth.kakao.com/.well-known/jwks.json
             user-name-attribute: id
-          microsoft:
-            issuer-uri: https://login.microsoftonline.com/[app-id]/v2.0
-            authorization-uri: https://login.microsoftonline.com/[app-id]/oauth2/v2.0/authorize
-            token-uri: https://login.microsoftonline.com/[app-id]/oauth2/v2.0/token
-            user-info-uri: https://graph.microsoft.com/oidc/userinfo
-            jwk-set-uri: https://login.microsoftonline.com/[app-id]/discovery/v2.0/keys
+#            user-name-attribute: sub # OpenID Connect
+#          microsoft:
+#            issuer-uri: https://login.microsoftonline.com/[app-id]/v2.0
+#            authorization-uri: https://login.microsoftonline.com/[app-id]/oauth2/v2.0/authorize
+#            token-uri: https://login.microsoftonline.com/[app-id]/oauth2/v2.0/token
+#            user-info-uri: https://graph.microsoft.com/oidc/userinfo
+#            jwk-set-uri: https://login.microsoftonline.com/[app-id]/discovery/v2.0/keys
   mvc:
     static-path-pattern: /static/**
