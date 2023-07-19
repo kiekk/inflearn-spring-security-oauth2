@@ -2,6 +2,7 @@ package io.security.oauth2.resourcserver.config;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
+import com.nimbusds.jose.jwk.RSAKey;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.context.annotation.Bean;
@@ -20,9 +21,21 @@ public class JwtDecoderConfig {
             name = "jws-algorithms",
             havingValue = "HS256"
     )
-    public JwtDecoder jwtDecoderByPublicKeyValue(OctetSequenceKey octetSequenceKey, OAuth2ResourceServerProperties properties) throws JOSEException {
+    public JwtDecoder jwtDecoderBySecretKeyValue(OctetSequenceKey octetSequenceKey, OAuth2ResourceServerProperties properties) throws JOSEException {
         return NimbusJwtDecoder.withSecretKey(octetSequenceKey.toSecretKey())
                 .macAlgorithm(MacAlgorithm.from(properties.getJwt().getJwsAlgorithms().get(0)))
+                .build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+            prefix = "spring.security.oauth2.resourceserver.jwt",
+            name = "jws-algorithms",
+            havingValue = "RS512"
+    )
+    public JwtDecoder jwtDecoderByPublicKeyValue(RSAKey rsaKey, OAuth2ResourceServerProperties properties) throws JOSEException {
+        return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey())
+                .signatureAlgorithm(SignatureAlgorithm.from(properties.getJwt().getJwsAlgorithms().get(0)))
                 .build();
     }
 
