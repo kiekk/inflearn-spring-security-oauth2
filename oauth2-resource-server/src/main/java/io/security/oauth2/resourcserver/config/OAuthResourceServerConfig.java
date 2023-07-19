@@ -1,13 +1,20 @@
 package io.security.oauth2.resourcserver.config;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
+import com.nimbusds.jose.jwk.RSAKey;
 import io.security.oauth2.resourcserver.filter.authentication.JwtAuthenticationFilter;
+import io.security.oauth2.resourcserver.filter.authorization.JwtAuthorizationMacFilter;
+import io.security.oauth2.resourcserver.filter.authorization.JwtAuthorizationRsaFilter;
 import io.security.oauth2.resourcserver.signature.MacSecuritySigner;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.security.oauth2.resourcserver.signature.RsaSecuritySigner;
+import io.security.oauth2.resourcserver.signature.SecuritySigner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
@@ -23,12 +30,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class OAuthResourceServerConfig {
 
-    @Autowired
-    private MacSecuritySigner macSecuritySigner;
-
-    @Autowired
-    private OctetSequenceKey octetSequenceKey;
-
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -40,16 +41,33 @@ public class OAuthResourceServerConfig {
                                 .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService())
-                .addFilterBefore(jwtAuthenticationFilter(macSecuritySigner, octetSequenceKey), UsernamePasswordAuthenticationFilter.class)
-                .oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer.jwt(Customizer.withDefaults()))
+                .addFilterBefore(jwtAuthenticationFilter(null, null), UsernamePasswordAuthenticationFilter.class)
+//                .addFilterBefore(jwtAuthorizationRsaFilter(null), UsernamePasswordAuthenticationFilter.class) // RSA
+                .addFilterBefore(jwtAuthorizationMacFilter(null), UsernamePasswordAuthenticationFilter.class) // MAC
                 .build();
     }
 
-    @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
+    // RSA
+//    @Bean
+    JwtAuthorizationRsaFilter jwtAuthorizationRsaFilter(RSAKey rsaKey) throws JOSEException {
+        return new JwtAuthorizationRsaFilter(new RSASSAVerifier(rsaKey.toRSAPublicKey()));
     }
 
+    // RSA
+//    @Bean
+//    JwtAuthenticationFilter jwtAuthenticationFilter(RsaSecuritySigner rsaSecuritySigner, RSAKey rsaKey) throws Exception {
+//        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(rsaSecuritySigner, rsaKey);
+//        jwtAuthenticationFilter.setAuthenticationManager(authenticationManager(null));
+//        return jwtAuthenticationFilter;
+//    }
+
+    // MAC
+    @Bean
+    JwtAuthorizationMacFilter jwtAuthorizationMacFilter(OctetSequenceKey octetSequenceKey) throws JOSEException {
+        return new JwtAuthorizationMacFilter(new MACVerifier(octetSequenceKey.toSecretKey()));
+    }
+
+    // MAC
     @Bean
     JwtAuthenticationFilter jwtAuthenticationFilter(MacSecuritySigner macSecuritySigner, OctetSequenceKey octetSequenceKey) throws Exception {
         JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(macSecuritySigner, octetSequenceKey);
@@ -73,4 +91,10 @@ public class OAuthResourceServerConfig {
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
 }
