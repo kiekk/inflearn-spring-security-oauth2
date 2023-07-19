@@ -8,4 +8,5 @@ spring:
         jwt:
           issuer-uri: http://localhost:18080/realms/master
           jwk-set-uri: http://localhost:18080/realms/master/protocol/openid-connect/certs
+          jws-algorithms: HS256
 

@@ -2,12 +2,12 @@ package io.security.oauth2.resourcserver.config;
 
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import io.security.oauth2.resourcserver.filter.authentication.JwtAuthenticationFilter;
-import io.security.oauth2.resourcserver.filter.authorization.JwtAuthorizationMacFilter;
 import io.security.oauth2.resourcserver.signature.MacSecuritySigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
@@ -41,12 +41,8 @@ public class OAuthResourceServerConfig {
                 )
                 .userDetailsService(userDetailsService())
                 .addFilterBefore(jwtAuthenticationFilter(macSecuritySigner, octetSequenceKey), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthorizationMacFilter(octetSequenceKey), UsernamePasswordAuthenticationFilter.class)
+                .oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer.jwt(Customizer.withDefaults()))
                 .build();
-    }
-
-    private JwtAuthorizationMacFilter jwtAuthorizationMacFilter(OctetSequenceKey octetSequenceKey) {
-        return new JwtAuthorizationMacFilter(octetSequenceKey);
     }
 
     @Bean
