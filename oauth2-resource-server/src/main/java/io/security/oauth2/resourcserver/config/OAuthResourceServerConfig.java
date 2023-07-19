@@ -1,13 +1,17 @@
 package io.security.oauth2.resourcserver.config;
 
+import com.nimbusds.jose.jwk.OctetSequenceKey;
 import io.security.oauth2.resourcserver.filter.authentication.JwtAuthenticationFilter;
+import io.security.oauth2.resourcserver.filter.authorization.JwtAuthorizationMacFilter;
+import io.security.oauth2.resourcserver.signature.MacSecuritySigner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,18 +23,30 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class OAuthResourceServerConfig {
 
+    @Autowired
+    private MacSecuritySigner macSecuritySigner;
+
+    @Autowired
+    private OctetSequenceKey octetSequenceKey;
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(CsrfConfigurer::disable)
-                .authorizeHttpRequests(authz -> {
-                    authz
-                            .requestMatchers("/").permitAll()
-                            .anyRequest().authenticated();
-                })
+                .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authz ->
+                        authz
+                                .requestMatchers("/").permitAll()
+                                .anyRequest().authenticated()
+                )
                 .userDetailsService(userDetailsService())
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter(macSecuritySigner, octetSequenceKey), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthorizationMacFilter(octetSequenceKey), UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    private JwtAuthorizationMacFilter jwtAuthorizationMacFilter(OctetSequenceKey octetSequenceKey) {
+        return new JwtAuthorizationMacFilter(octetSequenceKey);
     }
 
     @Bean
@@ -39,8 +55,8 @@ public class OAuthResourceServerConfig {
     }
 
     @Bean
-    JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter();
+    JwtAuthenticationFilter jwtAuthenticationFilter(MacSecuritySigner macSecuritySigner, OctetSequenceKey octetSequenceKey) throws Exception {
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(macSecuritySigner, octetSequenceKey);
         jwtAuthenticationFilter.setAuthenticationManager(authenticationManager(null));
         return jwtAuthenticationFilter;
     }
