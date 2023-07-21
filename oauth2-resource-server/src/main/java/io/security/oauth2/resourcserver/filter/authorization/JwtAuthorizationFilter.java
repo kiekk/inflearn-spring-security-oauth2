@@ -29,13 +29,11 @@ public abstract class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
+        if (tokenResolve(request)) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        String token = header.replace("Bearer ", "");
+        String token = getToken(request);
 
         SignedJWT signedJWT;
 
@@ -65,6 +63,15 @@ public abstract class JwtAuthorizationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    protected String getToken(HttpServletRequest request) {
+        return request.getHeader("Authorization").replace("Bearer ", "");
+    }
+
+    protected boolean tokenResolve(HttpServletRequest request) throws IOException, ServletException {
+        String header = request.getHeader("Authorization");
+        return header == null || !header.startsWith("Bearer ");
     }
 
 }
