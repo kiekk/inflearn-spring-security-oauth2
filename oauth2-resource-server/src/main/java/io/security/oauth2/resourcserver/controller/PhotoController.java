@@ -31,7 +31,7 @@ public class PhotoController {
 
     @GetMapping("/photos/3")
     @PreAuthorize("hasAnyAuthority('SCOPE_photo')")
-    public Photo photo3(Authentication authentication) {
+    public Photo photo3() {
         return Photo.builder()
                 .id("3")
                 .title("Photo 3 title")
@@ -40,5 +40,14 @@ public class PhotoController {
                 .build();
     }
 
+    @GetMapping("/photos/4")
+    public Photo photo4() {
+        return Photo.builder()
+                .id("4")
+                .title("Photo 4 title")
+                .description("Photo is beautiful")
+                .userId("user4")
+                .build();
+    }
 
 }
