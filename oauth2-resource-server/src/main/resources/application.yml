@@ -5,7 +5,9 @@ spring:
   security:
     oauth2:
       resource-server:
-        jwt:
-          jwk-set-uri: http://localhost:18080/realms/master/protocol/openid-connect/certs
+        opaquetoken:
+          introspection-uri: 'introspection-uri'
+          client-id: 'client-id'
+          client-secret: 'client-secret'
 
 

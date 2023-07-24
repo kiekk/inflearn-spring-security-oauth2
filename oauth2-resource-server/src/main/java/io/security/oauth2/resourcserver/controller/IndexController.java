@@ -1,48 +1,32 @@
 package io.security.oauth2.resourcserver.controller;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
+import io.security.oauth2.resourcserver.dto.OpaqueDto;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
+import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Map;
 
 @RestController
 public class IndexController {
 
     @GetMapping("/")
-    public String index() {
-        return "index";
+    public OpaqueDto index(Authentication authentication, @AuthenticationPrincipal OAuth2AuthenticatedPrincipal principal) {
+
+        BearerTokenAuthentication authenticationToken = (BearerTokenAuthentication) authentication;
+        Map<String, Object> tokenAttributes = authenticationToken.getTokenAttributes();
+        boolean active = (boolean) tokenAttributes.get("active");
+
+        OpaqueDto opaqueDto = new OpaqueDto();
+        opaqueDto.setActive(active);
+        opaqueDto.setAuthentication(authenticationToken);
+        opaqueDto.setPrincipal(principal);
+
+        return opaqueDto;
     }
 
-    @GetMapping("/api/user")
-    public Authentication apiUser(Authentication authentication, @AuthenticationPrincipal Jwt principal) throws URISyntaxException {
-        JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) authentication;
-        String sub = (String) authenticationToken.getTokenAttributes().get("sub");
-        String email = (String) authenticationToken.getTokenAttributes().get("email");
-        String scope = (String) authenticationToken.getTokenAttributes().get("scope");
-
-        String sub1 = principal.getClaim("sub");
-        String token = principal.getTokenValue();
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
-
-        // 현재는 8082 포트가 없기 때문에 에러 발생
-        RequestEntity<String> request = new RequestEntity<>(headers, HttpMethod.GET, new URI("http://localhost:8082"));
-        ResponseEntity<String> response = restTemplate.exchange(request, String.class);
-        String body = response.getBody();
-
-        return authentication;
-    }
 
 }
